@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK 4 Flashcards - Random Mode</title>
+    <style>
+        :root {
+            --primary-color: #d32f2f;
+            --bg-color: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+        }
+
+        h1 { color: var(--primary-color); }
+
+        .card-container {
+            width: 350px;
+            height: 250px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            background: white;
+            border: 2px solid #eee;
+        }
+
+        .card-front {
+            font-size: 60px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #fff9f9;
+        }
+
+        .pinyin { font-size: 24px; color: var(--primary-color); margin-bottom: 10px; }
+        .meaning { font-size: 20px; color: #555; text-align: center; padding: 0 20px; }
+
+        .controls { margin-top: 30px; display: flex; gap: 20px; }
+
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+        .counter { margin-top: 15px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <h1>HSK 4 Vocabulary</h1>
+
+    <div class="card-container" onclick="flipCard()">
+        <div class="card" id="card">
+            <div class="card-face card-front" id="hanzi">...</div>
+            <div class="card-face card-back">
+                <div class="pinyin" id="pinyin">...</div>
+                <div class="meaning" id="meaning">...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="counter" id="counter">1 / 5</div>
+
+    <div class="controls">
+        <button onclick="prevCard()">Quay lại</button>
+        <button onclick="nextCard()">Tiếp theo</button>
+    </div>
+
+    <script>
+        const vocabulary = [
+            { hanzi: "坚持", pinyin: "jiānchí", meaning: "Kiên trì" },
+            { hanzi: "成功", pinyin: "chénggōng", meaning: "Thành công" },
+            { hanzi: "重点", pinyin: "zhòngdiǎn", meaning: "Trọng điểm" },
+            { hanzi: "甚至", pinyin: "shènzhì", meaning: "Thậm chí" },
+            { hanzi: "安排", pinyin: "ānpái", meaning: "Sắp xếp" },
+            { hanzi: "法律", pinyin: "fǎlǜ", meaning: "pháp luật" },
+            { hanzi: "俩", pinyin: "liǎ", meaning: "hai, cả hai" },
+            { hanzi: "印象", pinyin: "yìnxiàng", meaning: "ấn tượng" },
+            { hanzi: "深", pinyin: "shēn", meaning: "sâu, đậm" },
+            { hanzi: "熟悉", pinyin: "shúxi", meaning: "quen thuộc" },
+            { hanzi: "不仅", pinyin: "bùjǐn", meaning: "không những, không chỉ" },
+            { hanzi: "性格", pinyin: "xìnggé", meaning: "tính cách" },
+            { hanzi: "开玩笑", pinyin: "kāi wánxiào", meaning: "đùa, nói đùa" },
+            { hanzi: "最好", pinyin: "zuìhǎo", meaning: "tốt nhất" },
+            { hanzi: "共同", pinyin: "gòngtóng", meaning: "chung, cùng nhau" },
+            { hanzi: "适合", pinyin: "shìhé", meaning: "phù hợp, hợp" },
+            { hanzi: "幸福", pinyin: "xìngfú", meaning: "hạnh phúc" },
+            { hanzi: "生活", pinyin: "shēnghuó", meaning: "cuộc sống, sinh hoạt" },
+            { hanzi: "刚", pinyin: "gāng", meaning: "vừa mới" },
+            { hanzi: "浪漫", pinyin: "làngmàn", meaning: "lãng mạn" },
+            { hanzi: "够", pinyin: "gòu", meaning: "đủ" },
+            { hanzi: "缺点", pinyin: "quēdiǎn", meaning: "khuyết điểm" },
+            { hanzi: "优点", pinyin: "yōudiǎn", meaning: "ưu điểm" },
+            { hanzi: "接受", pinyin: "jiēshòu", meaning: "chấp nhận, tiếp nhận" },
+            { hanzi: "羡慕", pinyin: "xiànmù", meaning: "ngưỡng mộ, ghen tị" },
+            { hanzi: "爱情", pinyin: "àiqíng", meaning: "tình yêu" },
+            { hanzi: "星星", pinyin: "xīngxing", meaning: "ngôi sao" },
+            { hanzi: "即使", pinyin: "jíshǐ", meaning: "cho dù, ngay cả khi" },
+            { hanzi: "加班", pinyin: "jiā bān", meaning: "làm thêm giờ, tăng ca" },
+            { hanzi: "亮", pinyin: "liàng", meaning: "sáng" },
+            { hanzi: "感动", pinyin: "gǎndòng", meaning: "cảm động" },
+            { hanzi: "自然", pinyin: "zìrán", meaning: "tự nhiên" },
+            { hanzi: "原因", pinyin: "yuányīn", meaning: "nguyên nhân" },
+            { hanzi: "互相", pinyin: "hùxiāng", meaning: "lẫn nhau" },
+            { hanzi: "吸引", pinyin: "xīyǐn", meaning: "thu hút" },
+            { hanzi: "幽默", pinyin: "yōumò", meaning: "hài hước" },
+            { hanzi: "脾气", pinyin: "píqi", meaning: "tính tình" }
+        ];
+
+        // --- ĐOẠN CODE ĐẢO LỘN TỪ VỰNG ---
+        vocabulary.sort(() => Math.random() - 0.5);
+        // --------------------------------
+
+        let currentIndex = 0;
+        const card = document.getElementById('card');
+        const hanziEl = document.getElementById('hanzi');
+        const pinyinEl = document.getElementById('pinyin');
+        const meaningEl = document.getElementById('meaning');
+        const counterEl = document.getElementById('counter');
+
+        function updateCard() {
+            card.classList.remove('is-flipped');
+            setTimeout(() => {
+                const item = vocabulary[currentIndex];
+                hanziEl.textContent = item.hanzi;
+                pinyinEl.textContent = item.pinyin;
+                meaningEl.textContent = item.meaning;
+                counterEl.textContent = `${currentIndex + 1} / ${vocabulary.length}`;
+            }, 150);
+        }
+
+        function flipCard() { card.classList.toggle('is-flipped'); }
+        function nextCard() { currentIndex = (currentIndex + 1) % vocabulary.length; updateCard(); }
+        function prevCard() { currentIndex = (currentIndex - 1 + vocabulary.length) % vocabulary.length; updateCard(); }
+
+        updateCard();
+    </script>
+</body>
+</html>
